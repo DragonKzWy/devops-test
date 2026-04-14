@@ -10,6 +10,16 @@ services:
       - php
 
   php:
-    image: php:8.1-fpm
+    build: .
     volumes:
       - ./app:/var/www/html
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+    ports:
+      - "3306:3306"
