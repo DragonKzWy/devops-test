@@ -1,0 +1,19 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Build Docker
+        run: docker build -t devops-test .
+
+      - name: Validar docker-compose
+        run: docker compose config
