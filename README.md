@@ -1,9 +1,9 @@
-# 🚀 DevOps Test - Nginx + PHP-FPM com Docker
+# 🚀 DevOps Test - Nginx + PHP-FPM + MySQL com Docker
 
 ## 📌 Descrição
-Este projeto consiste na configuração de um ambiente de aplicação PHP utilizando Nginx como servidor web e PHP-FPM para processamento de scripts PHP, orquestrados com Docker Compose.
+Este projeto consiste na configuração de um ambiente completo de aplicação PHP utilizando **Nginx**, **PHP-FPM** e **MySQL**, orquestrados com Docker Compose.
 
-O objetivo é demonstrar a capacidade de configurar, executar e manter um ambiente básico de aplicação, seguindo conceitos de microsserviços.
+O objetivo é demonstrar a capacidade de configurar, executar e manter um ambiente de aplicação, incluindo integração entre serviços, persistência de dados, monitoramento e deploy em cloud.
 
 ---
 
@@ -13,128 +13,225 @@ O objetivo é demonstrar a capacidade de configurar, executar e manter um ambien
 - Docker Compose
 - Nginx
 - PHP-FPM
+- MySQL
+- GitHub Actions (CI)
+- AWS EC2
 - Linux
 
 ---
 
 ## 🏗 Arquitetura
 
-A aplicação é composta por dois serviços:
+A aplicação é composta por três serviços:
 
-- Nginx:
-  Responsável por receber requisições HTTP na porta 80 e encaminhar requisições PHP para o PHP-FPM.
+- **Nginx**
+  - Responsável por receber requisições HTTP (porta 80)
+  - Atua como proxy para o PHP-FPM
 
-- PHP-FPM:
-  Responsável por processar arquivos .php.
+- **PHP-FPM**
+  - Processa arquivos `.php`
+  - Conecta ao banco de dados MySQL
 
-A comunicação entre os serviços ocorre via FastCGI (porta 9000).
+- **MySQL**
+  - Armazena os dados da aplicação
+  - Configurado com persistência via volume Docker
+
+### 🔗 Comunicação entre serviços
+
+A comunicação ocorre via rede interna do Docker:
+
+- Nginx → PHP-FPM (`fastcgi_pass`)
+- PHP → MySQL (`host = mysql`)
 
 ---
 
 ## 📂 Estrutura do Projeto
 
+```
 devops-test/
 ├── app/
 │   └── index.php
 ├── docker-compose.yml
 ├── nginx.conf
+├── Dockerfile
 └── README.md
+```
 
 ---
 
 ## ⚙️ Pré-requisitos
 
 - Docker instalado
-- Docker Compose (docker compose)
+- Docker Compose
 
 ---
 
 ## ▶️ Como Executar o Projeto
 
-1. Clonar o repositório:
+### 1. Clonar o repositório
 
+```bash
 git clone https://github.com/DragonKzWy/devops-test.git
 cd devops-test
+```
 
-2. Subir os containers:
+---
 
-docker compose up -d
+### 2. Subir os containers
 
-3. Verificar containers em execução:
+```bash
+docker compose up -d --build
+```
 
+---
+
+### 3. Verificar containers
+
+```bash
 docker ps
+```
 
-4. Acessar a aplicação no navegador:
+---
 
+### 4. Acessar aplicação
+
+```
 http://localhost
+```
 
-Resultado esperado:
+---
 
-Olá, mundo!
+### Resultado esperado
+
+```
+Conectado ao MySQL com sucesso!
+```
 
 ---
 
 ## 🔍 Troubleshooting
 
-Caso a aplicação não funcione:
-
-Verificar containers:
+### Ver containers
+```bash
 docker ps
+```
 
-Ver logs do nginx:
+### Logs do Nginx
+```bash
 docker logs devops-test-nginx-1
+```
 
-Ver logs do php:
+### Logs do PHP
+```bash
 docker logs devops-test-php-1
+```
 
-Testar via terminal:
+### Logs do MySQL
+```bash
+docker logs devops-test-mysql-1
+```
+
+### Teste via terminal
+```bash
 curl localhost
+```
 
 ---
 
 ## 🔁 Comandos úteis
 
-Parar containers:
+```bash
 docker compose down
-
-Subir novamente:
 docker compose up -d
+docker compose up -d --build
+```
 
 ---
 
-## ☁️ Implantação em Cloud (AWS)
+## ⚙️ Dockerfile
 
-1. Criar instância EC2 (Ubuntu)
+Foi criada uma imagem customizada do PHP para incluir suporte ao MySQL:
+
+```Dockerfile
+FROM php:8.1-fpm
+RUN docker-php-ext-install mysqli
+```
+
+---
+
+## ❤️ Healthcheck
+
+Foi configurado healthcheck no Nginx para validar a disponibilidade da aplicação:
+
+- Verifica periodicamente se o serviço responde
+- Permite monitoramento básico de status
+
+---
+
+## 💾 Persistência de dados
+
+O MySQL utiliza volume Docker:
+
+- Evita perda de dados ao reiniciar containers
+- Simula ambiente de produção
+
+---
+
+## 🔄 CI (GitHub Actions)
+
+Foi implementado pipeline de integração contínua:
+
+- Build da imagem Docker
+- Validação do docker-compose
+
+Executado automaticamente a cada push na branch `main`.
+
+---
+
+## ☁️ Deploy na AWS
+
+O projeto foi implantado em uma instância EC2.
+
+### Passos:
+
+1. Criar instância EC2
 2. Liberar portas:
    - 22 (SSH)
    - 80 (HTTP)
 
 3. Instalar Docker:
-
+```bash
 sudo apt update
 sudo apt install docker.io docker-compose-plugin -y
+```
 
 4. Clonar repositório:
-
+```bash
 git clone https://github.com/DragonKzWy/devops-test.git
 cd devops-test
+```
 
 5. Subir containers:
+```bash
+docker compose up -d --build
+```
 
-docker compose up -d
+---
 
-6. Acessar via navegador:
+### Acesso
 
+```
 http://SEU_IP_PUBLICO
+```
 
 ---
 
 ## 🛠 Observações
 
-- O Nginx atua como proxy para o PHP-FPM
 - O PHP-FPM não responde diretamente via HTTP
-- A comunicação entre serviços ocorre via rede interna do Docker
-- O projeto foi estruturado de forma simples para foco em configuração e operação
+- O Nginx atua como proxy via FastCGI
+- Os serviços se comunicam pela rede interna do Docker
+- O projeto simula uma arquitetura real simplificada
 
 ---
 
